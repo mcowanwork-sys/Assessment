@@ -1,0 +1,5 @@
+{
+  "name": "SA Points Based System Assessment",
+  "description": "An automated points-based assessment tool for South Africa's Critical Skills Work Visa (Oct 2024 Regulations), featuring AI-powered occupation matching and real-time eligibility scoring.",
+  "requestFramePermissions": []
+}
