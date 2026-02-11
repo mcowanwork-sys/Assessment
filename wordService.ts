@@ -17,17 +17,14 @@ export const generateAssessmentWord = (data: AssessmentData, matchResult: MatchR
       <title>Assessment Report</title>
       <style>
         @page {
-          margin: 0.5in 0.5in 0.5in 0.4in; /* top right bottom left */
+          margin: 0.5in 0.5in 0.5in 0.25in; /* top right bottom left - tighter left margin */
         }
         body { 
           font-family: "Calibri", sans-serif; 
           font-size: 11pt; 
           line-height: 1.15; 
           color: black; 
-          margin-left: 0.4in; 
-          margin-right: 0.5in; 
-          margin-top: 0.5in; 
-          margin-bottom: 0.5in; 
+          margin: 0; /* Remove body margin to rely on @page margin for the "sooner" look */
         }
         p, li, h1, h2 { 
           margin-top: 0pt; 
