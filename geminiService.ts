@@ -15,14 +15,19 @@ const getNQFDescription = (level: NQFLevel) => {
 };
 
 export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel): Promise<MatchResult> => {
-  // Ensure we have an API key or a safe empty string to prevent initialization crash
-  const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : '';
-  const ai = new GoogleGenAI({ apiKey: apiKey || '' });
-  
-  const nqfDesc = getNQFDescription(nqfLevel);
-  const userNQFValue = nqfLevel === NQFLevel.OTHER ? 0 : parseInt(nqfLevel);
-  
   try {
+    // API key must be obtained exclusively from process.env.API_KEY
+    // We check for its existence before initializing the SDK.
+    const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : (window as any).process?.env?.API_KEY;
+    
+    if (!apiKey) {
+      throw new Error("API Key is missing. The application requires process.env.API_KEY to be set.");
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+    const nqfDesc = getNQFDescription(nqfLevel);
+    const userNQFValue = nqfLevel === NQFLevel.OTHER ? 0 : parseInt(nqfLevel);
+    
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `You are a South African Immigration Specialist. Determine if the following job title and qualification level match any occupation on the South African Critical Skills List (gazetted Oct 2023).
@@ -44,8 +49,9 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
       4. OFO CODE: Extract the exact code from the list provided (e.g., 2021-251201).
       5. isNQFValid: Boolean. True only if Applicant Numeric Level >= Min NQF required.
       
-      Respond only with a JSON object.`,
+      Respond ONLY with a JSON object.`,
       config: {
+        thinkingConfig: { thinkingBudget: 0 }, // Disable thinking for immediate response
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -67,21 +73,20 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
     });
 
     const text = response.text;
-    if (!text) throw new Error("Empty response from AI");
+    if (!text) throw new Error("The model returned an empty response.");
     
     // Safety: Extract JSON string even if model wraps it in markdown blocks
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const jsonStr = jsonMatch ? jsonMatch[0] : text;
     
-    const result = JSON.parse(jsonStr) as MatchResult;
-    return result;
-  } catch (error) {
+    return JSON.parse(jsonStr) as MatchResult;
+  } catch (error: any) {
     console.error("AI matching error:", error);
     return {
       matchType: 'NONE',
       officialOccupation: "",
       confidence: 0,
-      reason: "The matching service is currently unavailable or returned an invalid response. Please verify manually against the gazetted list.",
+      reason: `Verification Error: ${error.message || "Connection failed"}. Please check your connection or verify manually.`,
       isNQFValid: false
     };
   }
