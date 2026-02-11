@@ -17,7 +17,7 @@ const getNQFDescription = (level: NQFLevel) => {
 export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel): Promise<MatchResult> => {
   try {
     // The apiKey must be obtained exclusively from process.env.API_KEY.
-    // The environment is assumed to have this pre-configured.
+    // Initialization is done inside the function to ensure the most current key value is used.
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     const nqfDesc = getNQFDescription(nqfLevel);
@@ -75,8 +75,8 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
     return JSON.parse(jsonStr) as MatchResult;
   } catch (error: any) {
     console.error("AI matching error:", error);
-    // Descriptive error handling for UI feedback
     const errorMessage = error.message || "";
+    // Detect if the error is specifically related to a missing or invalid API key
     const isKeyError = errorMessage.toLowerCase().includes("api key") || errorMessage.toLowerCase().includes("apikey");
     
     return {
@@ -84,7 +84,7 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
       officialOccupation: "",
       confidence: 0,
       reason: isKeyError 
-        ? "The assessment engine is currently unavailable due to an API configuration issue. Please ensure the environment key is active."
+        ? "The assessment engine is currently unavailable due to an API configuration issue. Please ensure the project's environment variables are correctly set."
         : `Verification failed: ${error.message || "Please check your network connection."}`,
       isNQFValid: false
     };
