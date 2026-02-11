@@ -15,7 +15,10 @@ const getNQFDescription = (level: NQFLevel) => {
 };
 
 export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel): Promise<MatchResult> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Ensure we have an API key or a safe empty string to prevent initialization crash
+  const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : '';
+  const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+  
   const nqfDesc = getNQFDescription(nqfLevel);
   const userNQFValue = nqfLevel === NQFLevel.OTHER ? 0 : parseInt(nqfLevel);
   
@@ -66,7 +69,11 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
     const text = response.text;
     if (!text) throw new Error("Empty response from AI");
     
-    const result = JSON.parse(text) as MatchResult;
+    // Safety: Extract JSON string even if model wraps it in markdown blocks
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonStr = jsonMatch ? jsonMatch[0] : text;
+    
+    const result = JSON.parse(jsonStr) as MatchResult;
     return result;
   } catch (error) {
     console.error("AI matching error:", error);
@@ -74,7 +81,7 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
       matchType: 'NONE',
       officialOccupation: "",
       confidence: 0,
-      reason: "The matching service is currently unavailable. Please verify manually against the gazetted list.",
+      reason: "The matching service is currently unavailable or returned an invalid response. Please verify manually against the gazetted list.",
       isNQFValid: false
     };
   }

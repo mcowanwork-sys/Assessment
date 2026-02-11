@@ -83,13 +83,25 @@ const App: React.FC = () => {
   const handleVerify = useCallback(async () => {
     if (!data.jobTitle) return;
     setIsVerifying(true);
-    const result = await matchOccupationWithAI(data.jobTitle, data.nqfLevel);
-    setMatchResult(result);
-    setData(prev => ({ 
-      ...prev, 
-      isOccupationOnList: result.matchType === 'FULL' && result.isNQFValid 
-    }));
-    setIsVerifying(false);
+    try {
+      const result = await matchOccupationWithAI(data.jobTitle, data.nqfLevel);
+      setMatchResult(result);
+      setData(prev => ({ 
+        ...prev, 
+        isOccupationOnList: result.matchType === 'FULL' && result.isNQFValid 
+      }));
+    } catch (error) {
+      console.error("Verification failed:", error);
+      setMatchResult({
+        matchType: 'NONE',
+        officialOccupation: '',
+        confidence: 0,
+        reason: 'An unexpected error occurred during verification. Please try again.',
+        isNQFValid: false
+      });
+    } finally {
+      setIsVerifying(false);
+    }
   }, [data.jobTitle, data.nqfLevel]);
 
   const updateData = (updates: Partial<AssessmentData>) => {
