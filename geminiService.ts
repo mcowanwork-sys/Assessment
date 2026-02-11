@@ -16,11 +16,8 @@ const getNQFDescription = (level: NQFLevel) => {
 
 export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel): Promise<MatchResult> => {
   try {
-    // The API key must be obtained exclusively from process.env.API_KEY
-    if (!process.env.API_KEY) {
-      throw new Error("API Key is missing in the environment.");
-    }
-
+    // Always use the standard initialization format as per SDK guidelines.
+    // The apiKey must be obtained exclusively from process.env.API_KEY.
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     const nqfDesc = getNQFDescription(nqfLevel);
@@ -83,7 +80,7 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
       matchType: 'NONE',
       officialOccupation: "",
       confidence: 0,
-      reason: `Matching failed: ${error.message || "Please ensure your API Key is correctly configured."}`,
+      reason: `Verification Error: ${error.message || "Could not connect to the assessment engine"}. Please try again later.`,
       isNQFValid: false
     };
   }
