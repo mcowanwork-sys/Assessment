@@ -16,12 +16,8 @@ const getNQFDescription = (level: NQFLevel) => {
 
 export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel): Promise<MatchResult> => {
   try {
-    const key = process.env.API_KEY;
-    if (!key) {
-      throw new Error("API key is missing from the environment (process.env.API_KEY is undefined).");
-    }
-
-    const ai = new GoogleGenAI({ apiKey: key });
+    // Always use the required initialization format.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     const nqfDesc = getNQFDescription(nqfLevel);
     const userNQFValue = nqfLevel === NQFLevel.OTHER ? 0 : parseInt(nqfLevel);
@@ -72,6 +68,7 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
     const text = response.text;
     if (!text) throw new Error("The model returned an empty response.");
     
+    // Safety check for JSON parsing
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const jsonStr = jsonMatch ? jsonMatch[0] : text;
     
@@ -79,10 +76,14 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
   } catch (error: any) {
     console.error("AI matching error details:", error);
     
-    let userFriendlyMessage = `Verification failed: ${error.message || "Please check your network."}`;
+    // Categorize error for user feedback
+    const errorMsg = error.message || "";
+    let userFriendlyMessage = "Verification failed. Please check your network and try again.";
     
-    if (error.message?.toLowerCase().includes("api key")) {
-      userFriendlyMessage = "The assessment engine is currently unavailable due to an API configuration issue. Please ensure the project's environment variables are active.";
+    if (errorMsg.includes("API_KEY") || errorMsg.includes("API key") || !process.env.API_KEY) {
+      userFriendlyMessage = "The assessment engine is currently unavailable due to an API configuration issue. Please ensure the environment key is active.";
+    } else if (errorMsg.includes("429")) {
+      userFriendlyMessage = "Too many requests. Please wait a moment before trying again.";
     }
     
     return {
