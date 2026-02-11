@@ -4,11 +4,6 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  define: {
-    // This allows the browser code to access the environment variable
-    'process.env.API_KEY': JSON.stringify(process.env.API_KEY || ''),
-    'process.env': {
-      API_KEY: JSON.stringify(process.env.API_KEY || '')
-    }
-  }
+  // Manual 'define' for process.env.API_KEY is removed to prevent build-time clobbering.
+  // The platform handles secret injection at runtime.
 });
