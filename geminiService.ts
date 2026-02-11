@@ -5,35 +5,41 @@ import { MatchResult, NQFLevel } from "./types";
 
 const getNQFDescription = (level: NQFLevel) => {
   switch (level) {
-    case NQFLevel.LEVEL_9_10: return "NQF Level 9 or 10 (Master's or Doctorate)";
-    case NQFLevel.LEVEL_7_8: return "NQF Level 7 or 8 (Bachelor's or Honours)";
-    default: return "Below NQF Level 7 (Diploma or lower)";
+    case NQFLevel.LEVEL_10: return "NQF Level 10 (Doctoral Degree)";
+    case NQFLevel.LEVEL_9: return "NQF Level 9 (Master's Degree)";
+    case NQFLevel.LEVEL_8: return "NQF Level 8 (Honours Degree / Post Grad Diploma)";
+    case NQFLevel.LEVEL_7: return "NQF Level 7 (Bachelor's Degree / Advanced Diploma)";
+    case NQFLevel.LEVEL_6: return "NQF Level 6 (Diploma / National Higher Certificate)";
+    default: return "Below NQF Level 6";
   }
 };
 
 export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel): Promise<MatchResult> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const nqfDesc = getNQFDescription(nqfLevel);
+  const userNQFValue = nqfLevel === NQFLevel.OTHER ? 0 : parseInt(nqfLevel);
   
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `You are a South African Immigration Specialist. Determine if the following job title and qualification level match any occupation on the South African Critical Skills List (gazetted Oct 2023).
       
-      User Job Title: ${jobTitle}
-      User Qualification Level: ${nqfDesc}
+      APPLICANT PROFILE:
+      - Job Title: "${jobTitle}"
+      - Qualification: "${nqfDesc}" (Numeric Level: ${userNQFValue})
       
       OFFICIAL CRITICAL SKILLS LIST DATA (OFO 2021):
       ${CRITICAL_SKILLS_LIST_SUMMARY}
       
       STRICT VERIFICATION RULES:
-      1. MATCH TYPE: 
-         - 'FULL': The job title corresponds clearly to a category in the list AND the user's NQF level meets or exceeds the specified 'Min NQF' requirement for that code.
-         - 'PARTIAL': The job title matches a category, but the user's NQF level is below the gazetted minimum (e.g., they have NQF 6 but the skill requires NQF 8).
-         - 'NONE': No reasonable match found.
-      2. OFO CODE: You MUST extract and provide the exact 6-digit OFO 2021 code provided in the list above (e.g., 2021-251201). DO NOT GUESS OR USE OLD CODES.
-      3. REASON: Cite the exact OFO code and mention the NQF requirement from the list provided.
-      4. NQF VALIDATION: Set 'isNQFValid' to true only if the user's level is equal to or higher than the 'Min NQF' for that specific occupation.
+      1. COMPARE the Applicant's Job Title against the list.
+      2. COMPARE the Numeric NQF Level (${userNQFValue}) against the "Min NQF" value in the list for that specific skill.
+      3. MATCH TYPE: 
+         - 'FULL': Precise semantic match for job title AND (Applicant NQF >= Min NQF).
+         - 'PARTIAL': Precise semantic match for job title BUT (Applicant NQF < Min NQF).
+         - 'NONE': No reasonable semantic match for the job title.
+      4. OFO CODE: Extract the exact code from the list provided (e.g., 2021-251201).
+      5. isNQFValid: Boolean. True only if Applicant Numeric Level >= Min NQF required.
       
       Respond only with a JSON object.`,
       config: {
@@ -46,7 +52,7 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
               description: "Must be 'FULL', 'PARTIAL', or 'NONE'" 
             },
             officialOccupation: { type: Type.STRING },
-            ofoCode: { type: Type.STRING, description: "6-digit OFO 2021 code from provided list" },
+            ofoCode: { type: Type.STRING, description: "The 6-digit OFO 2021 code" },
             confidence: { type: Type.NUMBER },
             reason: { type: Type.STRING },
             isNQFValid: { type: Type.BOOLEAN },
@@ -57,7 +63,10 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
       }
     });
 
-    const result = JSON.parse(response.text || "{}") as MatchResult;
+    const text = response.text;
+    if (!text) throw new Error("Empty response from AI");
+    
+    const result = JSON.parse(text) as MatchResult;
     return result;
   } catch (error) {
     console.error("AI matching error:", error);
@@ -65,7 +74,7 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
       matchType: 'NONE',
       officialOccupation: "",
       confidence: 0,
-      reason: "Error connecting to verification service.",
+      reason: "The matching service is currently unavailable. Please verify manually against the gazetted list.",
       isNQFValid: false
     };
   }

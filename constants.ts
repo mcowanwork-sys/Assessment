@@ -4,8 +4,11 @@ import { NQFLevel, SalaryRange, ExperienceRange } from './types';
 export const POINT_VALUES = {
   OCCUPATION_LIST: 100,
   NQF_LEVEL: {
-    [NQFLevel.LEVEL_9_10]: 50,
-    [NQFLevel.LEVEL_7_8]: 30,
+    [NQFLevel.LEVEL_10]: 50,
+    [NQFLevel.LEVEL_9]: 50,
+    [NQFLevel.LEVEL_8]: 30,
+    [NQFLevel.LEVEL_7]: 30,
+    [NQFLevel.LEVEL_6]: 0,
     [NQFLevel.OTHER]: 0,
   },
   SALARY: {
@@ -24,7 +27,6 @@ export const POINT_VALUES = {
 
 export const MINIMUM_POINTS_REQUIRED = 100;
 
-// Enriched summary using exact data from the 3 Oct 2023 Government Gazette (No. 49402)
 export const CRITICAL_SKILLS_LIST_SUMMARY = `
 OFFICIAL LIST OF GAZETTED CRITICAL SKILLS (OFO 2021 CODES & MIN NQF):
 - 2021-112101: Director (Enterprise / Organisation) (Min NQF 8)
@@ -84,7 +86,7 @@ OFFICIAL LIST OF GAZETTED CRITICAL SKILLS (OFO 2021 CODES & MIN NQF):
 - 2021-216401: Urban and Regional Planner (Min NQF 9)
 - 2021-216603: Multimedia Designer (Min NQF 7)
 - 2021-222114: Specialist Nurse Educator (Min NQF 7)
-- 2021-231101: University Lecturer (Min NQF 9/10)
+- 2021-231101: University Lecturer (Min NQF 9)
 - 2021-233107: FET School Teacher (Grades 10-12) (Min NQF 7)
 - 2021-233108: Senior Phase School Teacher (Grades 8-9) (Min NQF 7)
 - 2021-241103: Tax Professional (Min NQF 8)

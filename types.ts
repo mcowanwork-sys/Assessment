@@ -1,7 +1,10 @@
 
 export enum NQFLevel {
-  LEVEL_9_10 = '9_10', // Master's/Doctorate
-  LEVEL_7_8 = '7_8',   // Bachelor's/Honours
+  LEVEL_10 = '10', // Doctorate
+  LEVEL_9 = '9',   // Master's
+  LEVEL_8 = '8',   // Honours / PG Diploma
+  LEVEL_7 = '7',   // Bachelor's / Adv Diploma
+  LEVEL_6 = '6',   // Diploma
   OTHER = 'other'
 }
 

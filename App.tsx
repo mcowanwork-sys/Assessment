@@ -42,7 +42,7 @@ const App: React.FC = () => {
     fullName: '',
     jobTitle: '',
     isOccupationOnList: false,
-    nqfLevel: NQFLevel.OTHER,
+    nqfLevel: NQFLevel.LEVEL_7,
     salaryRange: SalaryRange.BELOW_650k,
     yearsExperience: ExperienceRange.LESS_FIVE,
     isTrustedEmployer: false,
@@ -281,9 +281,12 @@ const App: React.FC = () => {
                     value={data.nqfLevel}
                     onChange={e => updateData({ nqfLevel: e.target.value as NQFLevel })}
                   >
-                    <option value={NQFLevel.OTHER}>Below NQF 7 (0 pts)</option>
-                    <option value={NQFLevel.LEVEL_7_8}>NQF 7 or 8 (30 pts)</option>
-                    <option value={NQFLevel.LEVEL_9_10}>NQF 9 or 10 (50 pts)</option>
+                    <option value={NQFLevel.OTHER}>Other / Below NQF 6 (0 pts)</option>
+                    <option value={NQFLevel.LEVEL_6}>NQF Level 6 (0 pts)</option>
+                    <option value={NQFLevel.LEVEL_7}>NQF Level 7 (30 pts)</option>
+                    <option value={NQFLevel.LEVEL_8}>NQF Level 8 (30 pts)</option>
+                    <option value={NQFLevel.LEVEL_9}>NQF Level 9 (50 pts)</option>
+                    <option value={NQFLevel.LEVEL_10}>NQF Level 10 (50 pts)</option>
                   </select>
                 </div>
                 <div>
