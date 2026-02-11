@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { CRITICAL_SKILLS_LIST_SUMMARY } from "./constants";
 import { MatchResult, NQFLevel } from "./types";
@@ -16,8 +15,15 @@ const getNQFDescription = (level: NQFLevel) => {
 
 export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel): Promise<MatchResult> => {
   try {
-    // Always use the required initialization format.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Check if the key exists in process.env as per mandatory requirements
+    const apiKey = process.env.API_KEY;
+    
+    if (!apiKey) {
+      console.error("Gemini API Error: process.env.API_KEY is undefined. Please ensure the environment variable is configured.");
+      throw new Error("API_KEY_MISSING");
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
     
     const nqfDesc = getNQFDescription(nqfLevel);
     const userNQFValue = nqfLevel === NQFLevel.OTHER ? 0 : parseInt(nqfLevel);
@@ -66,9 +72,8 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
     });
 
     const text = response.text;
-    if (!text) throw new Error("The model returned an empty response.");
+    if (!text) throw new Error("EMPTY_RESPONSE");
     
-    // Safety check for JSON parsing
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const jsonStr = jsonMatch ? jsonMatch[0] : text;
     
@@ -76,14 +81,12 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
   } catch (error: any) {
     console.error("AI matching error details:", error);
     
-    // Categorize error for user feedback
-    const errorMsg = error.message || "";
     let userFriendlyMessage = "Verification failed. Please check your network and try again.";
     
-    if (errorMsg.includes("API_KEY") || errorMsg.includes("API key") || !process.env.API_KEY) {
-      userFriendlyMessage = "The assessment engine is currently unavailable due to an API configuration issue. Please ensure the environment key is active.";
-    } else if (errorMsg.includes("429")) {
-      userFriendlyMessage = "Too many requests. Please wait a moment before trying again.";
+    if (error.message === "API_KEY_MISSING") {
+      userFriendlyMessage = "The assessment engine is currently unavailable due to an API configuration issue (Missing Key).";
+    } else if (error.message?.includes("API key") || error.message?.includes("invalid")) {
+      userFriendlyMessage = "The assessment engine encountered an API key error. Please verify your credentials.";
     }
     
     return {
