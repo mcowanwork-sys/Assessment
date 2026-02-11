@@ -10,6 +10,10 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
+    <script>
+      // Shim process.env for browser environments to prevent crashes
+      window.process = window.process || { env: {} };
+    </script>
 <script type="importmap">
 {
   "imports": {

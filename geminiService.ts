@@ -16,15 +16,13 @@ const getNQFDescription = (level: NQFLevel) => {
 
 export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel): Promise<MatchResult> => {
   try {
-    // API key must be obtained exclusively from process.env.API_KEY
-    // We check for its existence before initializing the SDK.
-    const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : (window as any).process?.env?.API_KEY;
-    
-    if (!apiKey) {
-      throw new Error("API Key is missing. The application requires process.env.API_KEY to be set.");
+    // The API key must be obtained exclusively from process.env.API_KEY
+    if (!process.env.API_KEY) {
+      throw new Error("API Key is missing in the environment.");
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
     const nqfDesc = getNQFDescription(nqfLevel);
     const userNQFValue = nqfLevel === NQFLevel.OTHER ? 0 : parseInt(nqfLevel);
     
@@ -51,7 +49,6 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
       
       Respond ONLY with a JSON object.`,
       config: {
-        thinkingConfig: { thinkingBudget: 0 }, // Disable thinking for immediate response
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -86,7 +83,7 @@ export const matchOccupationWithAI = async (jobTitle: string, nqfLevel: NQFLevel
       matchType: 'NONE',
       officialOccupation: "",
       confidence: 0,
-      reason: `Verification Error: ${error.message || "Connection failed"}. Please check your connection or verify manually.`,
+      reason: `Matching failed: ${error.message || "Please ensure your API Key is correctly configured."}`,
       isNQFValid: false
     };
   }
